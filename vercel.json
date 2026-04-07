@@ -1,5 +1,5 @@
 {
-  "buildCommand": "CI=1 EXPO_NO_PROMPT=1 npx expo export --platform web --output-dir dist",
+  "buildCommand": "npx expo export --platform web --output-dir dist",
   "outputDirectory": "dist",
   "installCommand": "npm install --legacy-peer-deps",
   "devCommand": "npx expo start --web"
