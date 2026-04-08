@@ -1,11 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-let isWeb = false;
-try {
-  isWeb = typeof window !== 'undefined' && typeof localStorage !== 'undefined';
-} catch (e) {
-  isWeb = false;
-}
+const isWeb = typeof window !== 'undefined' && typeof localStorage !== 'undefined';
 
 const KEYS = {
   USER_DATA: '@cyberfit_user_data',
@@ -18,27 +13,24 @@ const KEYS = {
   MACROS_GOALS: '@cyberfit_macros_goals',
 };
 
-const webStorage = {};
-
-const getStorage = () => {
+const setItem = (key, value) => {
   if (isWeb) {
-    try {
-      return window.localStorage || webStorage;
-    } catch {
-      return webStorage;
-    }
+    localStorage.setItem(key, value);
+  } else {
+    AsyncStorage.setItem(key, value);
   }
-  return AsyncStorage;
+};
+
+const getItem = async (key) => {
+  if (isWeb) {
+    return localStorage.getItem(key);
+  }
+  return AsyncStorage.getItem(key);
 };
 
 export const saveUserData = async (data) => {
   try {
-    if (isWeb) {
-      const storage = getStorage();
-      storage.setItem(KEYS.USER_DATA, JSON.stringify(data));
-    } else {
-      await AsyncStorage.setItem(KEYS.USER_DATA, JSON.stringify(data));
-    }
+    setItem(KEYS.USER_DATA, JSON.stringify(data));
   } catch (error) {
     console.error('Error saving user data:', error);
   }
@@ -46,14 +38,8 @@ export const saveUserData = async (data) => {
 
 export const getUserData = async () => {
   try {
-    if (isWeb) {
-      const storage = getStorage();
-      const data = storage.getItem(KEYS.USER_DATA);
-      return data ? JSON.parse(data) : null;
-    } else {
-      const data = await AsyncStorage.getItem(KEYS.USER_DATA);
-      return data ? JSON.parse(data) : null;
-    }
+    const data = await getItem(KEYS.USER_DATA);
+    return data ? JSON.parse(data) : null;
   } catch (error) {
     console.error('Error getting user data:', error);
     return null;
@@ -64,14 +50,7 @@ export const saveFoodLog = async (foodEntry) => {
   try {
     const existingLogs = await getFoodLogs();
     existingLogs.push({ ...foodEntry, date: new Date().toISOString() });
-    
-    if (isWeb) {
-      const storage = getStorage();
-      storage.setItem(KEYS.FOOD_LOGS, JSON.stringify(existingLogs));
-    } else {
-      await AsyncStorage.setItem(KEYS.FOOD_LOGS, JSON.stringify(existingLogs));
-    }
-    
+    setItem(KEYS.FOOD_LOGS, JSON.stringify(existingLogs));
     await updateStreak('foodLog');
   } catch (error) {
     console.error('Error saving food log:', error);
@@ -80,14 +59,8 @@ export const saveFoodLog = async (foodEntry) => {
 
 export const getFoodLogs = async () => {
   try {
-    if (isWeb) {
-      const storage = getStorage();
-      const logs = storage.getItem(KEYS.FOOD_LOGS);
-      return logs ? JSON.parse(logs) : [];
-    } else {
-      const logs = await AsyncStorage.getItem(KEYS.FOOD_LOGS);
-      return logs ? JSON.parse(logs) : [];
-    }
+    const logs = await getItem(KEYS.FOOD_LOGS);
+    return logs ? JSON.parse(logs) : [];
   } catch (error) {
     console.error('Error getting food logs:', error);
     return [];
@@ -98,14 +71,7 @@ export const saveWaterLog = async (amount) => {
   try {
     const existingLogs = await getWaterLogs();
     existingLogs.push({ amount, date: new Date().toISOString() });
-    
-    if (isWeb) {
-      const storage = getStorage();
-      storage.setItem(KEYS.WATER_LOGS, JSON.stringify(existingLogs));
-    } else {
-      await AsyncStorage.setItem(KEYS.WATER_LOGS, JSON.stringify(existingLogs));
-    }
-    
+    setItem(KEYS.WATER_LOGS, JSON.stringify(existingLogs));
     await updateStreak('waterLog');
   } catch (error) {
     console.error('Error saving water log:', error);
@@ -114,14 +80,8 @@ export const saveWaterLog = async (amount) => {
 
 export const getWaterLogs = async () => {
   try {
-    if (isWeb) {
-      const storage = getStorage();
-      const logs = storage.getItem(KEYS.WATER_LOGS);
-      return logs ? JSON.parse(logs) : [];
-    } else {
-      const logs = await AsyncStorage.getItem(KEYS.WATER_LOGS);
-      return logs ? JSON.parse(logs) : [];
-    }
+    const logs = await getItem(KEYS.WATER_LOGS);
+    return logs ? JSON.parse(logs) : [];
   } catch (error) {
     console.error('Error getting water logs:', error);
     return [];
@@ -140,14 +100,7 @@ export const saveWorkoutLog = async (workoutEntry) => {
   try {
     const existingLogs = await getWorkoutLogs();
     existingLogs.push({ ...workoutEntry, date: new Date().toISOString() });
-    
-    if (isWeb) {
-      const storage = getStorage();
-      storage.setItem(KEYS.WORKOUT_LOGS, JSON.stringify(existingLogs));
-    } else {
-      await AsyncStorage.setItem(KEYS.WORKOUT_LOGS, JSON.stringify(existingLogs));
-    }
-    
+    setItem(KEYS.WORKOUT_LOGS, JSON.stringify(existingLogs));
     await updateStreak('workout');
   } catch (error) {
     console.error('Error saving workout log:', error);
@@ -156,14 +109,8 @@ export const saveWorkoutLog = async (workoutEntry) => {
 
 export const getWorkoutLogs = async () => {
   try {
-    if (isWeb) {
-      const storage = getStorage();
-      const logs = storage.getItem(KEYS.WORKOUT_LOGS);
-      return logs ? JSON.parse(logs) : [];
-    } else {
-      const logs = await AsyncStorage.getItem(KEYS.WORKOUT_LOGS);
-      return logs ? JSON.parse(logs) : [];
-    }
+    const logs = await getItem(KEYS.WORKOUT_LOGS);
+    return logs ? JSON.parse(logs) : [];
   } catch (error) {
     console.error('Error getting workout logs:', error);
     return [];
@@ -174,13 +121,7 @@ export const saveWeight = async (weight) => {
   try {
     const history = await getWeightHistory();
     history.push({ weight, date: new Date().toISOString() });
-    
-    if (isWeb) {
-      const storage = getStorage();
-      storage.setItem(KEYS.WEIGHT_HISTORY, JSON.stringify(history));
-    } else {
-      await AsyncStorage.setItem(KEYS.WEIGHT_HISTORY, JSON.stringify(history));
-    }
+    setItem(KEYS.WEIGHT_HISTORY, JSON.stringify(history));
   } catch (error) {
     console.error('Error saving weight:', error);
   }
@@ -188,14 +129,8 @@ export const saveWeight = async (weight) => {
 
 export const getWeightHistory = async () => {
   try {
-    if (isWeb) {
-      const storage = getStorage();
-      const history = storage.getItem(KEYS.WEIGHT_HISTORY);
-      return history ? JSON.parse(history) : [];
-    } else {
-      const history = await AsyncStorage.getItem(KEYS.WEIGHT_HISTORY);
-      return history ? JSON.parse(history) : [];
-    }
+    const history = await getItem(KEYS.WEIGHT_HISTORY);
+    return history ? JSON.parse(history) : [];
   } catch (error) {
     console.error('Error getting weight history:', error);
     return [];
@@ -224,12 +159,7 @@ export const getTodayMacros = async () => {
 
 export const saveMacrosGoals = async (goals) => {
   try {
-    if (isWeb) {
-      const storage = getStorage();
-      storage.setItem(KEYS.MACROS_GOALS, JSON.stringify(goals));
-    } else {
-      await AsyncStorage.setItem(KEYS.MACROS_GOALS, JSON.stringify(goals));
-    }
+    setItem(KEYS.MACROS_GOALS, JSON.stringify(goals));
   } catch (error) {
     console.error('Error saving macros goals:', error);
   }
@@ -237,14 +167,8 @@ export const saveMacrosGoals = async (goals) => {
 
 export const getMacrosGoals = async () => {
   try {
-    if (isWeb) {
-      const storage = getStorage();
-      const goals = storage.getItem(KEYS.MACROS_GOALS);
-      return goals ? JSON.parse(goals) : { protein: 150, carbs: 200, fat: 65 };
-    } else {
-      const goals = await AsyncStorage.getItem(KEYS.MACROS_GOALS);
-      return goals ? JSON.parse(goals) : { protein: 150, carbs: 200, fat: 65 };
-    }
+    const goals = await getItem(KEYS.MACROS_GOALS);
+    return goals ? JSON.parse(goals) : { protein: 150, carbs: 200, fat: 65 };
   } catch (error) {
     console.error('Error getting macros goals:', error);
     return { protein: 150, carbs: 200, fat: 65 };
@@ -273,12 +197,7 @@ const updateStreak = async (type) => {
         streaks.workoutStreak = Math.max(streaks.workoutStreak || 0, streaks.currentStreak);
       }
       
-      if (isWeb) {
-        const storage = getStorage();
-        storage.setItem(KEYS.STREAKS, JSON.stringify(streaks));
-      } else {
-        await AsyncStorage.setItem(KEYS.STREAKS, JSON.stringify(streaks));
-      }
+      setItem(KEYS.STREAKS, JSON.stringify(streaks));
     }
   } catch (error) {
     console.error('Error updating streak:', error);
@@ -287,24 +206,13 @@ const updateStreak = async (type) => {
 
 export const getStreaks = async () => {
   try {
-    if (isWeb) {
-      const storage = getStorage();
-      const streaks = storage.getItem(KEYS.STREAKS);
-      return streaks ? JSON.parse(streaks) : {
-        currentStreak: 0,
-        workoutStreak: 0,
-        totalDays: 0,
-        lastActivityDate: null,
-      };
-    } else {
-      const streaks = await AsyncStorage.getItem(KEYS.STREAKS);
-      return streaks ? JSON.parse(streaks) : {
-        currentStreak: 0,
-        workoutStreak: 0,
-        totalDays: 0,
-        lastActivityDate: null,
-      };
-    }
+    const streaks = await getItem(KEYS.STREAKS);
+    return streaks ? JSON.parse(streaks) : {
+      currentStreak: 0,
+      workoutStreak: 0,
+      totalDays: 0,
+      lastActivityDate: null,
+    };
   } catch (error) {
     console.error('Error getting streaks:', error);
     return { currentStreak: 0, workoutStreak: 0, totalDays: 0, lastActivityDate: null };
@@ -313,14 +221,8 @@ export const getStreaks = async () => {
 
 export const getAchievements = async () => {
   try {
-    if (isWeb) {
-      const storage = getStorage();
-      const achievements = storage.getItem(KEYS.ACHIEVEMENTS);
-      return achievements ? JSON.parse(achievements) : [];
-    } else {
-      const achievements = await AsyncStorage.getItem(KEYS.ACHIEVEMENTS);
-      return achievements ? JSON.parse(achievements) : [];
-    }
+    const achievements = await getItem(KEYS.ACHIEVEMENTS);
+    return achievements ? JSON.parse(achievements) : [];
   } catch (error) {
     console.error('Error getting achievements:', error);
     return [];
@@ -337,13 +239,7 @@ export const unlockAchievement = async (achievement) => {
         ...achievement,
         unlockedAt: new Date().toISOString(),
       });
-      
-      if (isWeb) {
-        const storage = getStorage();
-        storage.setItem(KEYS.ACHIEVEMENTS, JSON.stringify(achievements));
-      } else {
-        await AsyncStorage.setItem(KEYS.ACHIEVEMENTS, JSON.stringify(achievements));
-      }
+      setItem(KEYS.ACHIEVEMENTS, JSON.stringify(achievements));
     }
   } catch (error) {
     console.error('Error unlocking achievement:', error);
@@ -353,9 +249,8 @@ export const unlockAchievement = async (achievement) => {
 export const clearAllData = async () => {
   try {
     if (isWeb) {
-      const storage = getStorage();
       Object.values(KEYS).forEach(key => {
-        storage.removeItem(key);
+        localStorage.removeItem(key);
       });
     } else {
       await AsyncStorage.multiRemove(Object.values(KEYS));
